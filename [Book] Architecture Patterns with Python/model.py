@@ -20,10 +20,26 @@ class Batch:
         self.reference = ref
         self.sku = sku
         self.eta = eta
-        self.available_quantity = qty
+        self._purchased_quantity = qty
+        self._allocations = set() # type Set[OrderLine]
     
     def allocate(self, line: OrderLine):
-        self.available_quantity -= line.qty
+        if self.can_allocate(line): # 가용 수량이 충분하면
+            self._allocations.add(line) # 이를 set에 추가하기만 한다.
     
-    def can_allocate(self, line: OrderLine):
+    def deallocate(self, line: OrderLine):
+        if line in self._allocations: # 라인이 존재하면
+            self._allocations.remove(line) # 할당을 해제한다.
+
+    @property
+    def allocated_quantity(self) -> int:
+        # 할당수량 = 할당된 집합에 있는 qty 수량 합계
+        return sum(line.qty for line in self._allocations)
+    
+    @property
+    def available_quantity(self) -> int:
+        # 가용수량 = 구매수량 - 할당수량
+        return self._purchased_quantity - self.allocated_quantity
+
+    def can_allocate(self, line: OrderLine) -> bool:
         return self.sku == line.sku and self.available_quantity >= line.qty

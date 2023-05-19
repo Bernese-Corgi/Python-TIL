@@ -45,7 +45,7 @@ def test_cannot_allocate_if_available_smaller_than_required():
         batch_qty=2,
         line_qty=20
     )
-    assert small_batch.can_allocate(large_line)
+    assert small_batch.can_allocate(large_line) is False
 
 # 테스트는 사용 가능한 경우 필수 항목과 동일하게 할당할 수 있습니다.
 def test_can_allocate_if_available_equal_to_required():
@@ -70,3 +70,26 @@ def test_cannot_allocate_if_skus_do_not_match():
         qty=10
     )
     assert batch.can_allocate(differnt_sku_line) is False
+
+# 테스트는 할당된 줄만 할당 해제할 수 있습니다.
+def test_can_only_deallocate_allocated_lines():
+    batch, unallocated_line = make_batch_and_line(
+        sku="DECORATIVE-TRINKET",
+        batch_qty=20,
+        line_qty=2
+    )
+
+    batch.deallocate(unallocated_line)
+
+    assert batch.available_quantity == 20
+
+# 테스트 할당은 멱등적입니다.
+def test_allocation_is_idempotent():
+    batch, line = make_batch_and_line(
+        sku="ANGULAR-DESK",
+        batch_qty=20,
+        line_qty=2
+    )
+    batch.allocate(line)
+    batch.allocate(line)
+    assert batch.available_quantity == 18
