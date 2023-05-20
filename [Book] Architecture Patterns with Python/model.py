@@ -23,6 +23,15 @@ class Batch:
         self._purchased_quantity = qty
         self._allocations = set() # type Set[OrderLine]
     
+    # 동등성 비교
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Batch):
+            return False
+        return other.reference == self.reference
+    
+    def __hash__(self) -> int:
+        return hash(self.reference)
+    
     def allocate(self, line: OrderLine):
         if self.can_allocate(line): # 가용 수량이 충분하면
             self._allocations.add(line) # 이를 set에 추가하기만 한다.
